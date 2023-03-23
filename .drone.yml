@@ -1,0 +1,27 @@
+kind: pipeline
+type: kubernetes
+name: default
+steps:
+  - name: build-web
+    image: node:16.13.2-alpine3.15
+    commands:
+      - cp build/resources/logo.png web/src/images/logo.png
+      - cp build/resources/logo-with-name.png web/src/images/logo-with-name.png
+      - cp build/resources/favicon.ico web/public/favicon.ico
+      - cd web
+      - npm install
+      - npm run build
+      - cp -r build ../server/resource/
+
+  - name: build-app
+    image: plugins/docker
+    pull: if-not-exists
+    environment:
+    settings:
+      repo: repo.simbacloud.cn/fan/next-terminal
+      registry: https://repo.simbacloud.cn/
+      tag: ${DRONE_BUILD_NUMBER}
+      username:
+        from_secret: DOCKER_USERNAME
+      password:
+        from_secret: DOCKER_PASSWORD
